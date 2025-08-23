@@ -1,5 +1,7 @@
 import { Check } from "./components/check/check.js";
 
+window.isEditMode = false;
+
 let beingDragged = false;
 let draggedElement = null;
 let offsetX = 0;
@@ -8,14 +10,22 @@ let positionX = 0;
 let positionY = 0;
 let gridsize = 200;
 
-let editmode = false;
+const check = document.querySelector("custom-check");
 
-function enterEditMode() {
-  editmode = true;
-  console.log("EnterEditMode");
+function toggleEditMode() {
+  if (!window.isEditMode) {
+    window.isEditMode = true;
+    check.overlayBlocker(); //Testing
+
+    console.log(check);
+    console.log("EnterEditMode");
+  } else {
+    window.isEditMode = false;
+    check.removeBlocker();
+  }
 }
 
-window.enterEditMode = enterEditMode;
+window.toggleEditMode = toggleEditMode;
 
 function beginDragging(element, event) {
   beingDragged = true;

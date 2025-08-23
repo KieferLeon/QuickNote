@@ -1,4 +1,17 @@
 export class Check extends HTMLElement {
+  beingDragged = false;
+
+  offsetX = 0;
+  offsetY = 0;
+  positionX = 0;
+  positionY = 0;
+
+  // Grid sizes
+  elementHeight = 1;
+  elementWidth = 1;
+
+  blocker = document.createElement("div");
+
   constructor() {
     super();
 
@@ -9,15 +22,15 @@ export class Check extends HTMLElement {
 
     let maxItems = items.length >= 6;
 
-    let height = 1;
-    let width = 2;
+    this.addEventListener("mousedown", this.beginDragging);
 
     this.style.display = "block";
     this.style.gridColumn = "3 / 5";
     this.style.gridRow = "1";
-    this.style.width = "100%";
-    this.style.height = "100%";
+    this.style.width = "410px"; //Placholder
+    this.style.height = "200px"; //Placholder
     this.style.display = "block";
+    this.style.position = "relative";
 
     this.innerHTML = `
         <style>
@@ -93,39 +106,68 @@ export class Check extends HTMLElement {
     });
   }
 
-  beginDragging(element, event) {
-    beingDragged = true;
-    draggedElement = element;
+  beginDragging = (event) => {
+    if (!window.isEditMode) return;
 
-    offsetX = event.clientX - element.offsetLeft;
-    offsetY = event.clientY - element.offsetTop;
+    if (!this.contains(event.target)) return;
 
-    element.style.position = "absolute";
+    this.beingDragged = true;
+    this.offsetX = event.clientX - this.offsetLeft;
+    this.offsetY = event.clientY - this.offsetTop;
+    this.style.position = "absolute";
 
-    window.addEventListener("mousemove", dragging);
-    window.addEventListener("mouseup", stopDragging);
+    window.addEventListener("mousemove", this.dragging);
+    window.addEventListener("mouseup", this.stopDragging);
+  };
+
+  dragging = (event) => {
+    if (!this.beingDragged) return;
+    this.positionX = event.clientX - this.offsetX;
+    this.positionY = event.clientY - this.offsetY;
+
+    this.style.left = this.positionX + "px";
+    this.style.top = this.positionY + "px";
+  };
+
+  stopDragging = () => {
+    this.beingDragged = false;
+    this.style.position = "relative";
+
+    let rect = this.getBoundingClientRect();
+
+    const colStart = Math.floor(this.positionX / 200) + 1;
+    const colEnd = colStart + 1;
+    this.style.gridColumn = `${colStart} / ${colEnd}`;
+
+    const rowStart = Math.floor(this.positionY / 200) + 1;
+    const rowEnd = rowStart + 0;
+    this.style.gridRow = `${rowStart} / ${rowEnd}`;
+
+    this.style.left = "";
+    this.style.top = "";
+
+    window.removeEventListener("mousemove", this.dragging);
+    window.removeEventListener("mouseup", this.stopDragging);
+  };
+
+  overlayBlocker() {
+    let blocker = this.blocker;
+    blocker.style.position = "absolute";
+    blocker.style.top = "0";
+    blocker.style.left = "0";
+    blocker.style.width = "100%";
+    blocker.style.height = "100%";
+    blocker.style.background = "transparent";
+    blocker.style.zIndex = "1000";
+    blocker.style.pointerEvents = "auto";
+    blocker.style.userSelect = "none";
+    blocker.style.webkitUserSelect = "none";
+    blocker.style.mozUserSelect = "none";
+    blocker.style.msUserSelect = "none";
+
+    this.appendChild(blocker);
   }
-
-  dragging(event) {
-    if (beingDragged && draggedElement) {
-      positionX = event.clientX - offsetX;
-      positionY = event.clientY - offsetY;
-
-      draggedElement.style.left = positionX + "px";
-      draggedElement.style.top = positionY + "px";
-    }
-  }
-
-  stopDragging() {
-    beingDragged = false;
-
-    draggedElement.style.position = "static";
-    draggedElement.style.gridColumn = Math.round(positionX / 200);
-    draggedElement.style.gridRow = Math.round(positionY / 200);
-
-    draggedElement = null;
-
-    window.removeEventListener("mousemove", dragging);
-    window.removeEventListener("mouseup", stopDragging);
+  removeBlocker() {
+    this.blocker.remove();
   }
 }

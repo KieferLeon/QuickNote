@@ -37,7 +37,7 @@ body {
   display: grid;
   width: 100vw;
   height: 100vh;
-  grid-template-columns: repeat(5, var(--cell-width));
+  grid-template-columns: repeat(6, var(--cell-width));
   grid-auto-rows: var(--cell-width);
   gap: var(--cell-gap);
   background-color: var(--background);
