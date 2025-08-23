@@ -1,3 +1,5 @@
+import { Check } from "./components/check/check.js";
+
 let beingDragged = false;
 let draggedElement = null;
 let offsetX = 0;
@@ -5,6 +7,15 @@ let offsetY = 0;
 let positionX = 0;
 let positionY = 0;
 let gridsize = 200;
+
+let editmode = false;
+
+function enterEditMode() {
+  editmode = true;
+  console.log("EnterEditMode");
+}
+
+window.enterEditMode = enterEditMode;
 
 function beginDragging(element, event) {
   beingDragged = true;
@@ -44,3 +55,5 @@ function stopDragging() {
 
 const box = document.getElementById("box");
 box.addEventListener("mousedown", (event) => beginDragging(box, event));
+
+customElements.define("custom-check", Check);

@@ -1,26 +1,54 @@
 body {
   margin: 0px;
 }
+* {
+  margin: 0;
+  padding: 0;
+  font-family: var(--main-font);
+}
 
 :root {
   --cell-width: 200px;
   --cell-gap: 10px;
+  --background: rgb(20, 20, 20);
+  --tesxt-color: rgb(217, 217, 217);
+  --main-font:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.floating-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: #007bff;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .layout-grid {
   display: grid;
   width: 100vw;
   height: 100vh;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, var(--cell-width));
   grid-auto-rows: var(--cell-width);
   gap: var(--cell-gap);
-  background-color: rgb(66, 66, 66);
+  background-color: var(--background);
 }
 
 .item {
-  grid-column: 1; /* column 2 */
+  grid-column: 1;
   grid-row: 1;
-  background-color: aqua; /* makes it visible */
+  background-color: aqua; /* Testing */
   width: var(--cell-width);
   aspect-ratio: 1/1;
+
+  flex-direction: row;
 }

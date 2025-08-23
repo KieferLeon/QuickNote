@@ -8,10 +8,13 @@
   </head>
   <style></style>
   <body>
+    <button class="floating-button" onclick="enterEditMode()">+</button>
+
     <div class="layout-grid">
-      <div class="item" onmousedown="beginDragging(this, event)"></div>
+      <div id="box" class="item" onmousedown="beginDragging(this, event)"></div>
+      <custom-check></custom-check>
     </div>
 
-    <script src="main.js"></script>
+    <script type="module" src="main.js"></script>
   </body>
 </html>
