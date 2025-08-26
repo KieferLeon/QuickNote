@@ -1,5 +1,6 @@
 export class Check extends HTMLElement {
   beingDragged = false;
+  beingResized = false;
 
   offsetX = 0;
   offsetY = 0;
@@ -8,9 +9,28 @@ export class Check extends HTMLElement {
 
   // Grid sizes
   elementHeight = 1;
-  elementWidth = 1;
+  elementWidth = 3;
 
+  // Grid Layout
+  elementCol = 1;
+  elementRow = 1;
+
+  // Edit Mode
   blocker = document.createElement("div");
+
+  resizeLeft = document.createElement("div");
+  resizeTop = document.createElement("div");
+  resizeRight = document.createElement("div");
+  resizeBottom = document.createElement("div");
+
+  redraw;
+
+  resizes = [
+    this.resizeLeft,
+    this.resizeTop,
+    this.resizeRight,
+    this.resizeBottom,
+  ];
 
   constructor() {
     super();
@@ -25,10 +45,10 @@ export class Check extends HTMLElement {
     this.addEventListener("mousedown", this.beginDragging);
 
     this.style.display = "block";
-    this.style.gridColumn = "3 / 5";
-    this.style.gridRow = "1";
-    this.style.width = "410px"; //Placholder
-    this.style.height = "200px"; //Placholder
+    this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
+    this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
+    this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
+    this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
     this.style.display = "block";
     this.style.position = "relative";
 
@@ -71,14 +91,54 @@ export class Check extends HTMLElement {
             .lists{
               display: flex;
             }
+
+            .handle {
+              position: absolute;
+              width: 12px;
+              height: 12px;
+              background: white;
+              border: 1px solid #333;
+              border-radius: 50%;
+            }
+
+            .handle.left   { left: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+            .handle.top    { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+            .handle.right  { right: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+            .handle.bottom { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
         </style>
         <div class="check">
             <h1>name</h1>
             <div class="lists"> </div>
-            </div>   
-        </div>
+        </div>   
+        
     `;
     const checkmarkContainer = this.querySelector(".lists");
+
+    this.resizeLeft.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      this.beginResize(e);
+    });
+
+    this.resizes.forEach((resize) => {
+      resize.style.zIndex = "2";
+      resize.classList.add("handle");
+      resize.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+        this.beginResize(resize);
+      });
+    });
+
+    this.resizeLeft.classList.add("left");
+    this.resizeLeft.setAttribute("data-edge", "left");
+
+    this.resizeTop.classList.add("top");
+    this.resizeTop.setAttribute("data-edge", "top");
+
+    this.resizeRight.classList.add("right");
+    this.resizeRight.setAttribute("data-edge", "right");
+
+    this.resizeBottom.classList.add("bottom");
+    this.resizeBottom.setAttribute("data-edge", "bottom");
 
     items.forEach((checkmark) => {
       const checkmarkWrapper = document.createElement("div");
@@ -105,6 +165,75 @@ export class Check extends HTMLElement {
       }
     });
   }
+
+  beginResize = (element) => {
+    this.beingResized = true;
+    this.redraw = element;
+
+    console.log(element);
+    window.addEventListener("mousemove", this.resizing);
+    window.addEventListener("mouseup", this.stopRezising);
+  };
+
+  resizing = (event) => {
+    if (!this.beingResized) return;
+
+    this.positionX = event.clientX - this.offsetX;
+    this.positionY = event.clientY - this.offsetY;
+    console.log("2");
+  };
+
+  stopRezising = (element) => {
+    if (this.redraw.dataset.edge == "left") {
+      let newStart = Math.round(this.positionX / 200) + 1;
+      let endCol = this.elementCol + this.elementWidth;
+
+      this.elementWidth = endCol - newStart;
+
+      this.elementCol = newStart;
+      console.log("col" + this.elementCol);
+
+      this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
+
+      this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
+    } else if (this.redraw.dataset.edge == "top") {
+      let newStart = Math.round(this.positionY / 200);
+      let endRow = this.elementRow + this.elementHeight;
+
+      this.elementHeight = endRow - newStart;
+
+      this.elementRow = newStart;
+
+      this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
+
+      this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
+    } else if (this.redraw.dataset.edge == "right") {
+      console.log("right");
+
+      let endCol = Math.round(this.positionX / 200) + 1;
+
+      this.elementWidth = endCol - this.elementCol;
+
+      this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
+      this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
+    } else if (this.redraw.dataset.edge == "bottom") {
+      let endRow = Math.round(this.positionY / 200) + 1;
+
+      this.elementHeight = endRow - this.elementRow;
+
+      console.log(this.elementHeight);
+      console.log(this.elementRow);
+      this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
+      this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
+    } else {
+      throw console.error("Error didnt recognize wich side is resized ");
+    }
+
+    this.beingResized = false;
+
+    window.removeEventListener("mousemove", this.resizing);
+    window.removeEventListener("mouseup", this.stopRezising);
+  };
 
   beginDragging = (event) => {
     if (!window.isEditMode) return;
@@ -133,8 +262,6 @@ export class Check extends HTMLElement {
     this.beingDragged = false;
     this.style.position = "relative";
 
-    let rect = this.getBoundingClientRect();
-
     const colStart = Math.floor(this.positionX / 200) + 1;
     const colEnd = colStart + 1;
     this.style.gridColumn = `${colStart} / ${colEnd}`;
@@ -150,6 +277,20 @@ export class Check extends HTMLElement {
     window.removeEventListener("mouseup", this.stopDragging);
   };
 
+  overlayResize() {
+    this.resizes.forEach((resize) => {
+      resize.style.display = "block";
+      this.appendChild(resize);
+    });
+  }
+
+  removeResize() {
+    this.resizes.forEach((resize) => {
+      resize.style.display = "none";
+      this.removeChild(resize);
+    });
+  }
+
   overlayBlocker() {
     let blocker = this.blocker;
     blocker.style.position = "absolute";
@@ -158,16 +299,26 @@ export class Check extends HTMLElement {
     blocker.style.width = "100%";
     blocker.style.height = "100%";
     blocker.style.background = "transparent";
-    blocker.style.zIndex = "1000";
     blocker.style.pointerEvents = "auto";
     blocker.style.userSelect = "none";
     blocker.style.webkitUserSelect = "none";
     blocker.style.mozUserSelect = "none";
     blocker.style.msUserSelect = "none";
 
+    blocker.style.zIndex = "1";
+
     this.appendChild(blocker);
   }
   removeBlocker() {
     this.blocker.remove();
+  }
+
+  startEditmode() {
+    this.overlayBlocker();
+    this.overlayResize();
+  }
+  stopEditmode() {
+    this.removeBlocker();
+    this.removeResize();
   }
 }

@@ -5,6 +5,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--main-font);
+  user-select: none;
 }
 
 :root {
@@ -38,7 +39,7 @@ body {
   width: 100vw;
   height: 100vh;
   grid-template-columns: repeat(6, var(--cell-width));
-  grid-auto-rows: var(--cell-width);
+  grid-template-rows: repeat(3, var(--cell-width));
   gap: var(--cell-gap);
   background-color: var(--background);
 }

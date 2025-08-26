@@ -1,6 +1,6 @@
 import { Check } from "./components/check/check.js";
 
-window.isEditMode = false;
+window.isEditMode = true;
 
 let beingDragged = false;
 let draggedElement = null;
@@ -15,13 +15,13 @@ const check = document.querySelector("custom-check");
 function toggleEditMode() {
   if (!window.isEditMode) {
     window.isEditMode = true;
-    check.overlayBlocker(); //Testing
+    check.startEditmode(); //Testing
 
     console.log(check);
     console.log("EnterEditMode");
   } else {
     window.isEditMode = false;
-    check.removeBlocker();
+    check.stopEditmode();
   }
 }
 
