@@ -9,7 +9,7 @@ export class Check extends HTMLElement {
 
   // Grid sizes
   elementHeight = 1;
-  elementWidth = 3;
+  elementWidth = 1;
 
   // Grid Layout
   elementCol = 1;
@@ -23,7 +23,7 @@ export class Check extends HTMLElement {
   resizeRight = document.createElement("div");
   resizeBottom = document.createElement("div");
 
-  redraw;
+  selectedEdge;
 
   resizes = [
     this.resizeLeft,
@@ -114,17 +114,12 @@ export class Check extends HTMLElement {
     `;
     const checkmarkContainer = this.querySelector(".lists");
 
-    this.resizeLeft.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      this.beginResize(e);
-    });
-
     this.resizes.forEach((resize) => {
       resize.style.zIndex = "2";
       resize.classList.add("handle");
       resize.addEventListener("mousedown", (e) => {
         e.stopPropagation();
-        this.beginResize(resize);
+        this.beginResize(resize, e); // pass the event here
       });
     });
 
@@ -166,73 +161,59 @@ export class Check extends HTMLElement {
     });
   }
 
-  beginResize = (element) => {
+  beginResize = (element, event) => {
     this.beingResized = true;
-    this.redraw = element;
+    this.selectedEdge = element;
 
-    console.log(element);
     window.addEventListener("mousemove", this.resizing);
-    window.addEventListener("mouseup", this.stopRezising);
+    window.addEventListener("mouseup", this.stopResizing);
   };
 
   resizing = (event) => {
     if (!this.beingResized) return;
 
-    this.positionX = event.clientX - this.offsetX;
-    this.positionY = event.clientY - this.offsetY;
-    console.log("2");
+    this.positionX =
+      event.clientX - this.selectedEdge.getBoundingClientRect().left;
+    this.positionY =
+      event.clientY - this.selectedEdge.getBoundingClientRect().top;
+
+    console.log(this.positionX);
   };
 
-  stopRezising = (element) => {
-    if (this.redraw.dataset.edge == "left") {
-      let newStart = Math.round(this.positionX / 200) + 1;
-      let endCol = this.elementCol + this.elementWidth;
+  stopResizing = (element) => {
+    if (this.selectedEdge.dataset.edge == "left") {
+      const sizeChange = Math.round(this.positionX / 200);
+      const widthChange = Math.abs(sizeChange);
 
-      this.elementWidth = endCol - newStart;
+      this.elementCol += sizeChange;
+      this.elementWidth += widthChange;
+    } else if (this.selectedEdge.dataset.edge == "top") {
+      const sizeChange = Math.round(this.positionY / 200);
+      const heightChange = Math.abs(sizeChange);
 
-      this.elementCol = newStart;
-      console.log("col" + this.elementCol);
+      this.elementRow += sizeChange;
+      this.elementHeight += heightChange;
+    } else if (this.selectedEdge.dataset.edge == "right") {
+      const widthChange = Math.round(this.positionX / 200);
 
-      this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
+      this.elementWidth += widthChange;
+    } else if (this.selectedEdge.dataset.edge == "bottom") {
+      const heightChange = Math.round(this.positionY / 200);
 
-      this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
-    } else if (this.redraw.dataset.edge == "top") {
-      let newStart = Math.round(this.positionY / 200);
-      let endRow = this.elementRow + this.elementHeight;
-
-      this.elementHeight = endRow - newStart;
-
-      this.elementRow = newStart;
-
-      this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
-
-      this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
-    } else if (this.redraw.dataset.edge == "right") {
-      console.log("right");
-
-      let endCol = Math.round(this.positionX / 200) + 1;
-
-      this.elementWidth = endCol - this.elementCol;
-
-      this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
-      this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
-    } else if (this.redraw.dataset.edge == "bottom") {
-      let endRow = Math.round(this.positionY / 200) + 1;
-
-      this.elementHeight = endRow - this.elementRow;
-
-      console.log(this.elementHeight);
-      console.log(this.elementRow);
-      this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
-      this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
+      this.elementHeight += heightChange;
     } else {
       throw console.error("Error didnt recognize wich side is resized ");
     }
 
+    this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
+    this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
+    this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
+    this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
+
     this.beingResized = false;
 
     window.removeEventListener("mousemove", this.resizing);
-    window.removeEventListener("mouseup", this.stopRezising);
+    window.removeEventListener("mouseup", this.stopResizing);
   };
 
   beginDragging = (event) => {
@@ -266,9 +247,13 @@ export class Check extends HTMLElement {
     const colEnd = colStart + 1;
     this.style.gridColumn = `${colStart} / ${colEnd}`;
 
+    this.elementCol = colStart;
+
     const rowStart = Math.floor(this.positionY / 200) + 1;
     const rowEnd = rowStart + 0;
     this.style.gridRow = `${rowStart} / ${rowEnd}`;
+
+    this.elementRow = rowStart;
 
     this.style.left = "";
     this.style.top = "";
