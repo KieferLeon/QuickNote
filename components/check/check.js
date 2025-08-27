@@ -15,6 +15,8 @@ export class Check extends HTMLElement {
   elementCol = 1;
   elementRow = 1;
 
+  preview = document.createElement("div");
+
   // Edit Mode
   blocker = document.createElement("div");
 
@@ -44,12 +46,17 @@ export class Check extends HTMLElement {
 
     this.addEventListener("mousedown", this.beginDragging);
 
+    this.preview.style.display = "block";
+    this.preview.style.backgroundColor = "#444"; // Testing
+    this.preview.style.width = "100%";
+    this.preview.style.height = "100%";
+    this.preview.style.borderRadius = "20px";
+
     this.style.display = "block";
     this.style.gridColumn = `${this.elementCol} / ${this.elementCol + this.elementWidth}`;
     this.style.gridRow = `${this.elementRow} / ${this.elementRow + this.elementHeight}`;
     this.style.width = `${this.elementWidth * 200 + 10 * (this.elementWidth - 1)}px`;
     this.style.height = `${this.elementHeight * 200 + 10 * (this.elementHeight - 1)}px`;
-    this.style.display = "block";
     this.style.position = "relative";
 
     this.innerHTML = `
@@ -177,7 +184,43 @@ export class Check extends HTMLElement {
     this.positionY =
       event.clientY - this.selectedEdge.getBoundingClientRect().top;
 
-    console.log(this.positionX);
+    //Preview
+    let previewWidth = this.elementWidth;
+    let previewHeight = this.elementHeight;
+
+    let previewCol = this.elementCol;
+    let previewRow = this.elementRow;
+
+    if (this.selectedEdge.dataset.edge == "left") {
+      const sizeChange = Math.round(this.positionX / 200);
+      const widthChange = Math.abs(sizeChange);
+
+      previewCol += sizeChange;
+      previewWidth += widthChange;
+    } else if (this.selectedEdge.dataset.edge == "top") {
+      const sizeChange = Math.round(this.positionY / 200);
+      const heightChange = Math.abs(sizeChange);
+
+      previewRow += sizeChange;
+      previewHeight += heightChange;
+    } else if (this.selectedEdge.dataset.edge == "right") {
+      const widthChange = Math.round(this.positionX / 200);
+
+      previewWidth += widthChange;
+    } else if (this.selectedEdge.dataset.edge == "bottom") {
+      const heightChange = Math.round(this.positionY / 200);
+
+      previewHeight += heightChange;
+    } else {
+      throw console.error("Error didnt recognize wich side is resized ");
+    }
+
+    this.preview.style.gridColumn = `${previewCol} / ${previewCol + previewWidth}`;
+    this.preview.style.gridRow = `${previewRow} / ${previewRow + previewHeight}`;
+    this.preview.style.width = `${previewWidth * 200 + 10 * (previewWidth - 1)}px`;
+    this.preview.style.height = `${previewHeight * 200 + 10 * (previewHeight - 1)}px`;
+
+    console.log(this.positionY);
   };
 
   stopResizing = (element) => {
@@ -226,6 +269,8 @@ export class Check extends HTMLElement {
     this.offsetY = event.clientY - this.offsetTop;
     this.style.position = "absolute";
 
+    this.before(this.preview);
+
     window.addEventListener("mousemove", this.dragging);
     window.addEventListener("mouseup", this.stopDragging);
   };
@@ -234,6 +279,16 @@ export class Check extends HTMLElement {
     if (!this.beingDragged) return;
     this.positionX = event.clientX - this.offsetX;
     this.positionY = event.clientY - this.offsetY;
+
+    const colStart = Math.floor(this.positionX / 200) + 1;
+    const colEnd = colStart + this.elementWidth;
+    this.preview.style.gridColumn = `${colStart} / ${colEnd}`;
+
+    this.elementCol = colStart;
+
+    const rowStart = Math.floor(this.positionY / 200) + 1;
+    const rowEnd = rowStart + this.elementHeight;
+    this.preview.style.gridRow = `${rowStart} / ${rowEnd}`;
 
     this.style.left = this.positionX + "px";
     this.style.top = this.positionY + "px";
