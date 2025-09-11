@@ -1,15 +1,21 @@
-import { useState } from 'react'
-import Grid from './components/grid/grid'
-import BaseComponent from './components/element/BaseComponent'
+import { useState } from 'react';
+import Grid from './components/Grid/Grid';
+import BaseComponent from './components/BaseComponent/BaseComponent';
+import EditModeButton from './components/EditModeButton/EditModeButton';
 
 function App() {
-  const [] = useState(0)
+  const [isEditMode, setIsEditMode] = useState(false);
 
   return (
-    <Grid> 
-      <BaseComponent/>
-    </Grid>
-  )
+    <>
+      <EditModeButton
+        toggle={() => setIsEditMode(!isEditMode)}
+      />
+      <Grid>
+        <BaseComponent isEditMode={isEditMode} />
+      </Grid>
+    </>
+  );
 }
 
-export default App
+export default App;
