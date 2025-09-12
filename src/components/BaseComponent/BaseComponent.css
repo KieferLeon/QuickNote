@@ -5,6 +5,7 @@
   height: 200px;
   width: 200px;
   border-radius: 8px;
+  padding: 0px;
 
   background-color: lightblue;
   user-select: none;
@@ -12,8 +13,7 @@
 
 .resize-handle {
   position: absolute;
-  background: blueviolet;
-  /* dev */
+  background: transparent;
   z-index: 10;
 }
 

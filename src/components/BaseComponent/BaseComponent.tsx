@@ -8,6 +8,7 @@ type Props = {
 
 type State = {
     isDragging: boolean;
+    isResizing: boolean;
 
     posX: number;
     posY: number;
@@ -29,7 +30,6 @@ class BaseComponent extends Component<Props, State> {
     resizeX: number = 0;
     resizeY: number = 0;
 
-    // Store the side being resized
     currentResizeSide: "top" | "right" | "bottom" | "left" | null = null;
 
     constructor(props: Props) {
@@ -40,6 +40,7 @@ class BaseComponent extends Component<Props, State> {
 
         this.state = {
             isDragging: false,
+            isResizing: false,
             posX: elementCol * GridSize,
             posY: elementRow * GridSize,
 
@@ -77,8 +78,8 @@ class BaseComponent extends Component<Props, State> {
 
 
         this.setState({
-            previewCol: Math.round(x / GridSize),
-            previewRow: Math.round(y / GridSize)
+            previewCol: Math.round(x / GridSize) + 1,
+            previewRow: Math.round(y / GridSize) + 1
         });
 
         this.setState({ posX: x, posY: y });
@@ -116,6 +117,7 @@ class BaseComponent extends Component<Props, State> {
         console.log('beginresizing', side, event.clientX, event.clientY);
 
         this.currentResizeSide = side;
+        this.setState({ isResizing: true });
 
         document.addEventListener("mousemove", this.resizing);
         document.addEventListener("mouseup", this.endResize);
@@ -127,49 +129,10 @@ class BaseComponent extends Component<Props, State> {
         this.resizeX = event.clientX;
         this.resizeY = event.clientY;
 
-        const { elementCol, elementRow, elementWidth, elementHeight } = this.state;
-
-        switch (this.currentResizeSide) {
-            case "left": {
-                const delta =
-                    Math.round(this.resizeX / GridSize) + 1 - (elementCol + elementWidth);
-
-                this.setState({
-                    previewWidth: elementWidth + Math.abs(delta) - 1,
-                    previewCol: elementCol - Math.abs(delta),
-                });
-                break;
-            }
-
-            case "top": {
-                const delta =
-                    Math.round(this.resizeY / GridSize) + 1 - (elementRow + elementHeight);
-
-                this.setState({
-                    previewHeight: elementHeight + Math.abs(delta) - 1,
-                    previewRow: elementRow - Math.abs(delta),
-                });
-                break;
-            }
-
-            case "right": {
-                const delta =
-                    Math.round(this.resizeX / GridSize) + 1 - (elementCol + elementWidth);
-
-                this.setState({ previewWidth: elementWidth + delta });
-                console.log(delta);
-                break;
-            }
-
-            case "bottom": {
-                const delta =
-                    Math.round(this.resizeY / GridSize) + 1 - (elementRow + elementHeight);
-
-                this.setState({ previewHeight: elementHeight + delta });
-                break;
-            }
-        }
+        const usePreview = true;
+        this.updateResize(usePreview);
     };
+
 
     endResize = (event: MouseEvent) => {
         if (!this.props.isEditMode || !this.currentResizeSide) return;
@@ -177,28 +140,56 @@ class BaseComponent extends Component<Props, State> {
         this.resizeX = event.clientX;
         this.resizeY = event.clientY;
 
+        const usePreview = false;
+        this.updateResize(usePreview);
+
+        document.removeEventListener("mousemove", this.resizing);
+        document.removeEventListener("mouseup", this.endResize);
+
+        this.currentResizeSide = null;
+        this.setState({ isResizing: false });
+    };
+
+    updateResize(usePreview = true) {
+        if (!this.props.isEditMode || !this.currentResizeSide) return;
+
         const { elementCol, elementRow, elementWidth, elementHeight } = this.state;
+
 
         switch (this.currentResizeSide) {
             case "left": {
                 const delta =
-                    Math.round(this.resizeX / GridSize) + 1 - (elementCol + elementWidth);
+                    Math.round(this.resizeX / GridSize) + 1 - elementCol;
 
-                this.setState({
-                    elementWidth: elementWidth + Math.abs(delta) - 1,
-                    elementCol: elementCol - Math.abs(delta),
-                });
+                if (usePreview) {
+                    this.setState({
+                        previewWidth: elementWidth + Math.abs(delta),
+                        previewCol: elementCol - Math.abs(delta),
+                    });
+                } else {
+                    this.setState({
+                        elementWidth: elementWidth + Math.abs(delta),
+                        elementCol: elementCol - Math.abs(delta),
+                    });
+                }
                 break;
             }
 
             case "top": {
                 const delta =
-                    Math.round(this.resizeY / GridSize) + 1 - (elementRow + elementHeight);
+                    Math.round(this.resizeY / GridSize) + 1 - elementRow;
 
-                this.setState({
-                    elementHeight: elementHeight + Math.abs(delta) - 1,
-                    elementRow: elementRow - Math.abs(delta),
-                });
+                if (usePreview) {
+                    this.setState({
+                        previewHeight: elementHeight + Math.abs(delta),
+                        previewRow: elementRow - Math.abs(delta),
+                    });
+                } else {
+                    this.setState({
+                        elementHeight: elementHeight + Math.abs(delta),
+                        elementRow: elementRow - Math.abs(delta),
+                    });
+                }
                 break;
             }
 
@@ -206,7 +197,11 @@ class BaseComponent extends Component<Props, State> {
                 const delta =
                     Math.round(this.resizeX / GridSize) + 1 - (elementCol + elementWidth);
 
-                this.setState({ elementWidth: elementWidth + delta });
+                if (usePreview) {
+                    this.setState({ previewWidth: elementWidth + delta });
+                } else {
+                    this.setState({ elementWidth: elementWidth + delta });
+                }
                 break;
             }
 
@@ -214,24 +209,18 @@ class BaseComponent extends Component<Props, State> {
                 const delta =
                     Math.round(this.resizeY / GridSize) + 1 - (elementRow + elementHeight);
 
-                this.setState({ elementHeight: elementHeight + delta });
+                if (usePreview) {
+                    this.setState({ previewHeight: elementHeight + delta });
+                } else {
+                    this.setState({ elementHeight: elementHeight + delta });
+                }
                 break;
             }
         }
-
-        console.log('endResize', this.state);
-
-        document.removeEventListener("mousemove", this.resizing);
-        document.removeEventListener("mouseup", this.endResize);
-
-        this.currentResizeSide = null;
-    };
+    }
 
     render() {
-        const { isDragging, elementRow, elementCol, posX, posY } = this.state;
-
-        const previewCol = Math.round(posX / GridSize);
-        const previewRow = Math.round(posY / GridSize);
+        const { isDragging, elementRow, elementCol, previewRow, previewCol, posX, posY } = this.state;
 
         console.log('render', { posX, posY, previewCol, previewRow });
 
@@ -250,22 +239,22 @@ class BaseComponent extends Component<Props, State> {
                 position: 'relative' as const,
                 gridRow: elementRow,
                 gridColumn: elementCol,
-                width: GridSize * this.state.elementWidth + this.state.elementWidth * Gap,
-                height: GridSize * this.state.elementHeight + this.state.elementHeight * Gap,
+                width: GridSize * this.state.elementWidth + (this.state.elementWidth - 1) * Gap,
+                height: GridSize * this.state.elementHeight + (this.state.elementHeight - 1) * Gap,
                 cursor: 'grab' as const,
                 userSelect: 'none' as const,
             };
 
         const previewStyle = {
             position: 'absolute' as const,
-            left: this.state.previewCol * GridSize + this.state.previewCol * Gap,
-            top: this.state.previewRow * GridSize + this.state.previewRow * Gap,
-            width: this.state.previewWidth * GridSize,
-            height: this.state.previewHeight * GridSize,
+            gridRow: previewRow,
+            gridColumn: previewCol,
+            width: this.state.previewWidth * GridSize + (this.state.previewWidth - 1) * Gap,
+            height: this.state.previewHeight * GridSize + (this.state.previewHeight - 1) * Gap,
             background: 'rgba(0, 0, 255, 0.2)',
-            border: '2px dashed #00f',
+            outline: '2px dashed #00f',
             pointerEvents: 'none' as const,
-            zIndex: -1,
+            zIndex: this.state.isResizing ? 999 : 0,
         };
 
         return (
