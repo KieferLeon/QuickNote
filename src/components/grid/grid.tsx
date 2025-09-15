@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import './style.css';
 import { GridSize } from '../../config';
-import BaseComponent from '../BaseComponent/BaseComponent';
+import BaseModule from '../Modules/BaseModule/BaseModule';
 import React from 'react';
 
 type GridArea = {
@@ -12,12 +12,12 @@ type GridArea = {
 }
 
 class Grid extends Component {
-  elementRefs: React.RefObject<BaseComponent | null>[] = [];
+  elementRefs: React.RefObject<BaseModule | null>[] = [];
 
   constructor(props: any) {
     super(props);
 
-    this.elementRefs = [React.createRef<BaseComponent>(), React.createRef<BaseComponent>()];
+    this.elementRefs = [React.createRef<BaseModule>(), React.createRef<BaseModule>()];
   }
 
 
@@ -59,7 +59,7 @@ class Grid extends Component {
         }}
       >
         {this.elementRefs.map((Element, index) => (
-          <BaseComponent
+          <BaseModule
             key={index}
             ref={Element}
             elementKey={index}

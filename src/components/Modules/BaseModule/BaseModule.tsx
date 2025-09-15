@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import './BaseComponent.css'
-import { GridSize, Gap } from "../../config";
+import { GridSize, Gap } from "../../../config";
 
 type Props = {
     isEditMode: boolean;
@@ -26,7 +26,7 @@ type State = {
     previewHeight: number;
 };
 
-class BaseComponent extends Component<Props, State> {
+class BaseModule extends Component<Props, State> {
     offsetX: number = 0;
     offsetY: number = 0;
 
@@ -349,4 +349,4 @@ class BaseComponent extends Component<Props, State> {
     }
 }
 
-export default BaseComponent;
+export default BaseModule;
