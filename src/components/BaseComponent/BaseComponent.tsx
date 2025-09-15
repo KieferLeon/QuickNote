@@ -4,11 +4,14 @@ import { GridSize, Gap } from "../../config";
 
 type Props = {
     isEditMode: boolean;
+    elementKey: number;
+    checkCollision: (area: { col: number, row: number, width: number, height: number }, elementKey: number) => boolean;
 };
 
 type State = {
     isDragging: boolean;
     isResizing: boolean;
+    collision: boolean;
 
     posX: number;
     posY: number;
@@ -31,6 +34,7 @@ class BaseComponent extends Component<Props, State> {
     resizeY: number = 0;
 
     currentResizeSide: "top" | "right" | "bottom" | "left" | null = null;
+    type: any;
 
     constructor(props: Props) {
         super(props);
@@ -41,6 +45,8 @@ class BaseComponent extends Component<Props, State> {
         this.state = {
             isDragging: false,
             isResizing: false,
+            collision: false,
+
             posX: elementCol * GridSize,
             posY: elementRow * GridSize,
 
@@ -82,11 +88,43 @@ class BaseComponent extends Component<Props, State> {
             previewRow: Math.round(y / GridSize) + 1
         });
 
+        if (this.props.checkCollision(
+            {
+                col: this.state.previewCol,
+                row: this.state.previewRow,
+                width: this.state.elementWidth,
+                height: this.state.elementHeight
+            },
+            this.props.elementKey)) {
+            this.setState({ collision: true });
+        } else {
+            this.setState({ collision: false });
+        }
+
         this.setState({ posX: x, posY: y });
     }
 
     endmove = (event: MouseEvent) => {
         if (!this.state.isDragging) return;
+
+        document.removeEventListener("mousemove", this.moving);
+        document.removeEventListener("mouseup", this.endmove);
+
+        if (this.state.collision) {
+            this.setState({
+                isDragging: false,
+                posX: this.state.elementCol * GridSize,
+                posY: this.state.elementRow * GridSize,
+                elementCol: this.state.elementCol,
+                elementRow: this.state.elementRow,
+                previewCol: this.state.elementCol,
+                previewRow: this.state.elementRow,
+                collision: false,
+            });
+
+            return;
+        }
+
 
         const x = event.clientX - this.offsetX;
         const y = event.clientY - this.offsetY;
@@ -103,9 +141,6 @@ class BaseComponent extends Component<Props, State> {
             posX: newElementCol * GridSize,
             posY: newElementRow * GridSize,
         });
-
-        document.removeEventListener("mousemove", this.moving);
-        document.removeEventListener("mouseup", this.endmove);
     }
 
     beginresizing = (side: "top" | "right" | "bottom" | "left", event: React.MouseEvent<HTMLDivElement>) => {
@@ -131,20 +166,49 @@ class BaseComponent extends Component<Props, State> {
 
         const usePreview = true;
         this.updateResize(usePreview);
+
+        if (this.props.checkCollision(
+            {
+                col: this.state.previewCol,
+                row: this.state.previewRow,
+                width: this.state.previewWidth,
+                height: this.state.previewHeight
+            },
+            this.props.elementKey)) {
+            this.setState({ collision: true });
+        } else {
+            this.setState({ collision: false });
+        }
     };
 
 
     endResize = (event: MouseEvent) => {
         if (!this.props.isEditMode || !this.currentResizeSide) return;
 
+        document.removeEventListener("mousemove", this.resizing);
+        document.removeEventListener("mouseup", this.endResize);
+
+        if (this.state.collision) {
+            this.setState({
+                isResizing: false,
+                posX: this.state.elementCol * GridSize,
+                posY: this.state.elementRow * GridSize,
+                elementCol: this.state.elementCol,
+                elementRow: this.state.elementRow,
+                previewCol: this.state.elementCol,
+                previewRow: this.state.elementRow,
+                previewWidth: this.state.elementWidth,
+                previewHeight: this.state.elementHeight,
+                collision: false,
+            });
+            return;
+        }
+
         this.resizeX = event.clientX;
         this.resizeY = event.clientY;
 
         const usePreview = false;
         this.updateResize(usePreview);
-
-        document.removeEventListener("mousemove", this.resizing);
-        document.removeEventListener("mouseup", this.endResize);
 
         this.currentResizeSide = null;
         this.setState({ isResizing: false });
@@ -163,13 +227,13 @@ class BaseComponent extends Component<Props, State> {
 
                 if (usePreview) {
                     this.setState({
-                        previewWidth: elementWidth + Math.abs(delta),
-                        previewCol: elementCol - Math.abs(delta),
+                        previewWidth: elementWidth - delta,
+                        previewCol: elementCol + delta,
                     });
                 } else {
                     this.setState({
-                        elementWidth: elementWidth + Math.abs(delta),
-                        elementCol: elementCol - Math.abs(delta),
+                        elementWidth: elementWidth - delta,
+                        elementCol: elementCol + delta,
                     });
                 }
                 break;
@@ -181,13 +245,13 @@ class BaseComponent extends Component<Props, State> {
 
                 if (usePreview) {
                     this.setState({
-                        previewHeight: elementHeight + Math.abs(delta),
-                        previewRow: elementRow - Math.abs(delta),
+                        previewHeight: elementHeight - delta,
+                        previewRow: elementRow + delta,
                     });
                 } else {
                     this.setState({
-                        elementHeight: elementHeight + Math.abs(delta),
-                        elementRow: elementRow - Math.abs(delta),
+                        elementHeight: elementHeight - delta,
+                        elementRow: elementRow + delta,
                     });
                 }
                 break;
@@ -222,7 +286,7 @@ class BaseComponent extends Component<Props, State> {
     render() {
         const { isDragging, elementRow, elementCol, previewRow, previewCol, posX, posY } = this.state;
 
-        console.log('render', { posX, posY, previewCol, previewRow });
+        //console.log('render', { posX, posY, previewCol, previewRow });
 
         const style = isDragging
             ? {
@@ -251,8 +315,8 @@ class BaseComponent extends Component<Props, State> {
             gridColumn: previewCol,
             width: this.state.previewWidth * GridSize + (this.state.previewWidth - 1) * Gap,
             height: this.state.previewHeight * GridSize + (this.state.previewHeight - 1) * Gap,
-            background: 'rgba(0, 0, 255, 0.2)',
-            outline: '2px dashed #00f',
+            background: this.state.collision ? 'rgba(255, 0, 0,0.2)' : 'rgba(0, 0, 255, 0.2)',
+            outline: '2px dashed ' + (this.state.collision ? '#ff0000ff' : '#00f'),
             pointerEvents: 'none' as const,
             zIndex: this.state.isResizing ? 999 : 0,
         };
