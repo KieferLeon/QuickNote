@@ -10,8 +10,9 @@ function App() {
       <EditModeButton
         toggle={() => setIsEditMode(!isEditMode)}
       />
-      <Grid>
-      </Grid>
+      <Grid
+        isEditMode={isEditMode}
+      />
     </>
   );
 }

@@ -13,7 +13,11 @@ type GridArea = {
   row: number
 }
 
-class Grid extends Component {
+type props = {
+  isEditMode: boolean
+};
+
+class Grid extends Component<props> {
   elementRefs: React.RefObject<BaseModule | null>[] = [];
 
   constructor(props: any) {
@@ -61,20 +65,10 @@ class Grid extends Component {
           gridTemplateRows: `repeat(auto-fill, ${GridSize}px)`,
         }}
       >
-        {/* this.elementRefs.map((Element, index) => (
-          <BaseModule
-            key={index}
-            ref={Element}
-            elementKey={index}
-            isEditMode={true}
-            checkCollision={(area, key) => this.checkCollision(area, key)}
-          />
-        )
-        ) */
+        {
           <ToDoList
-            ref={this.elementRefs[0]}
             elementKey={0}
-            isEditMode={true}
+            isEditMode={this.props.isEditMode}
             checkCollision={(area, key) => this.checkCollision(area, key)}
           />
         }
