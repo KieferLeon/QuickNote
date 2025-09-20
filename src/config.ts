@@ -1,2 +1,2 @@
-export const GridSize = 200; //Unit = PX
+export const GridSize = 250; //Unit = PX
 export const Gap = 10; //Unit = PX

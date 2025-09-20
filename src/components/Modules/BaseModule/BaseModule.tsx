@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import './BaseComponent.css'
+import './BaseModule.css';
 import { GridSize, Gap } from "../../../config";
 
 type Props = {
@@ -52,7 +52,7 @@ class BaseModule extends Component<Props, State> {
 
             elementCol: elementCol,
             elementRow: elementRow,
-            elementWidth: 1,
+            elementWidth: 3,
             elementHeight: 1,
 
             previewCol: 1,
@@ -283,6 +283,12 @@ class BaseModule extends Component<Props, State> {
         }
     }
 
+    renderContent() {
+        return (
+            <div>   </div>
+        );
+    }
+
     render() {
         const { isDragging, elementRow, elementCol, previewRow, previewCol, posX, posY } = this.state;
 
@@ -334,7 +340,8 @@ class BaseModule extends Component<Props, State> {
                     style={style}
                     onMouseDown={this.beginmove}
                 >
-                    This is a Base Component
+                    {this.renderContent()}
+
                     {this.props.isEditMode && (
                         <>
                             <div className="resize-handle top" onMouseDown={(e) => this.beginresizing("top", e)} />

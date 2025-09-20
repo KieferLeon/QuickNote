@@ -1,8 +1,10 @@
+import React from 'react';
 import { Component } from 'react';
 import './style.css';
 import { GridSize } from '../../config';
+
 import BaseModule from '../Modules/BaseModule/BaseModule';
-import React from 'react';
+import ToDoList from '../Modules/ToDoList/ToDoList';
 
 type GridArea = {
   width: number,
@@ -55,10 +57,11 @@ class Grid extends Component {
       <div
         className="grid"
         style={{
-          gridTemplateColumns: `repeat(auto-fill, ${GridSize}px)`
+          gridTemplateColumns: `repeat(auto-fill, ${GridSize}px)`,
+          gridTemplateRows: `repeat(auto-fill, ${GridSize}px)`,
         }}
       >
-        {this.elementRefs.map((Element, index) => (
+        {/* this.elementRefs.map((Element, index) => (
           <BaseModule
             key={index}
             ref={Element}
@@ -67,7 +70,13 @@ class Grid extends Component {
             checkCollision={(area, key) => this.checkCollision(area, key)}
           />
         )
-        )
+        ) */
+          <ToDoList
+            ref={this.elementRefs[0]}
+            elementKey={0}
+            isEditMode={true}
+            checkCollision={(area, key) => this.checkCollision(area, key)}
+          />
         }
       </div>
     );
